@@ -1,7 +1,7 @@
 package com.facpp.picturedetect;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
+
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -9,7 +9,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -19,10 +18,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.provider.MediaStore.Images.ImageColumns;
 import android.util.Log;
 import android.view.Menu;
@@ -30,7 +26,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.facepp.error.FaceppParseException;
 import com.facepp.http.HttpRequests;
@@ -45,7 +41,8 @@ import com.facepp.http.PostParameters;
 public class MainActivity extends Activity {
 	
 	public HashMap<String, Point> landmark;
-	public int[] face_part; // five face part
+	
+	public Bitmap[] face_part = new Bitmap[4]; // four face part
 
 	final private static String TAG = "MainActivity";
 	final private int PICTURE_CHOOSE = 1;
@@ -53,79 +50,142 @@ public class MainActivity extends Activity {
 	private ImageView imageView = null;
 	private Bitmap img = null;
 	private Button buttonDetect = null;
-	
-	private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
-	private Uri fileUri;
-	private ProgressDialog prodlg;
+	private TextView textView = null;
 	
 	private boolean max(float x, float y) {
-		if (x > y) return true;
+		if (x > y)
+			return true;
 		return false;
 	}
 	
 	private boolean min(float x, float y) {
-		if (x < y) return true;
+		if (x < y)
+			return true;
 		return false;
 	}
 	
+	
 	private CutPoint maxAndMinPoint(Point[] points) {
+		
 		CutPoint cp = new CutPoint();
+		cp.max = new Point();
+		cp.min = points[0];
+		
 		for (Point point : points) {
-			 	if (max(point.y, cp.max.y)) {
-			 		cp.max.y = point.y;
-			 	}
-			 	if (max(point.x, cp.max.x)) {
-			 		cp.max.x = point.x;
-			 	}
-			 	if (min(point.y, cp.min.y)) {
-			 		cp.min.y = point.y;
-			 	}
-			 	if (min(point.x, cp.min.x)) {
-			 		cp.min.x = point.x;
-			 	}
-			 	
-			 }
-			 return cp;
+			if (max(point.y, cp.max.y)) {
+				cp.max.y = point.y;
+			}
+			if (max(point.x, cp.max.x)) {
+				cp.max.x = point.x;
+			}
+			if (min(point.y, cp.min.y)) {
+				cp.min.y = point.y;
+			}
+			if (min(point.x, cp.min.x)) {
+				cp.min.x = point.x;
+			}
+			
+		}
+		return cp;
 	}
 	
+	
 	/**
-	 +	 * cut Bitmap to four parts
-	 +	 * @param bitmap
-	 +	 * @param landmark
-	 +	 * @return
-	 +	 */
-	 private int[] cut2four(Bitmap bitmap, HashMap<String, Point> landmark) {
-	 CutPoint cp = new CutPoint();
-	 int start_x, start_y, width, height; 
-	 
-	 // eyes
-	 Point[] eyepoints = null;
-	 eyepoints[0] = landmark.get("left_eye_bottom");
-	 eyepoints[1] = landmark.get("left_eye_center");
-	 eyepoints[2] = landmark.get("left_eye_left_corner");
-	 eyepoints[3] = landmark.get("left_eye_lower_left_quarter");
-	 eyepoints[4] = landmark.get("left_eye_lower_right_quarter");
-	 eyepoints[5] = landmark.get("left_eye_pupil");
-	 eyepoints[6] = landmark.get("left_eye_right_corner");
-	 eyepoints[7] = landmark.get("left_eye_top");
-	 eyepoints[8] = landmark.get("left_eye_upper_left_quarter");
-	 eyepoints[9] = landmark.get("left_eye_upper_right_quarter");
-	 cp = maxAndMinPoint(eyepoints);
-	 start_x = (int)cp.min.x;
-	 start_y = (int)cp.min.y;
-	 width = (int)(cp.max.x - cp.min.x);
-	 height = (int)(cp.max.y - cp.min.y);
-	 Bitmap eyes = Bitmap.createBitmap(bitmap, start_x, start_y, width, height);
-	 imageView.setImageBitmap(img);
-	 
-	 // eyebrow
-	 
-	 // lip
-	 
-	 // contour
-	 
-	 return null;
-	 }
+	 * cut Bitmap to four parts
+	 * @param bitmap
+	 * @param landmark
+	 * @return
+	 */
+	private void cut2four(Bitmap bitmap, HashMap<String, Point> landmark) {
+		CutPoint cp = new CutPoint();
+		cp.max = new Point();
+		cp.min = new Point();
+		int start_x, start_y, width, height; 
+		
+		// eyes
+		Point[] eyepoints = new Point[10];
+		eyepoints[0] = landmark.get("left_eye_bottom");
+		eyepoints[1] = landmark.get("left_eye_center");
+		eyepoints[2] = landmark.get("left_eye_left_corner");
+		eyepoints[3] = landmark.get("left_eye_lower_left_quarter");
+		eyepoints[4] = landmark.get("left_eye_lower_right_quarter");
+		eyepoints[5] = landmark.get("left_eye_pupil");
+		eyepoints[6] = landmark.get("left_eye_right_corner");
+		eyepoints[7] = landmark.get("left_eye_top");
+		eyepoints[8] = landmark.get("left_eye_upper_left_quarter");
+		eyepoints[9] = landmark.get("left_eye_upper_right_quarter");
+		
+		cp = maxAndMinPoint(eyepoints);
+		start_x = (int)cp.min.x;
+		start_y = (int)cp.min.y;
+		width = (int)(cp.max.x - cp.min.x);
+		height = (int)(cp.max.y - cp.min.y);
+		Bitmap eyes = Bitmap.createBitmap(bitmap, start_x, start_y, width, height);
+		
+		// eyebrow
+		Point[] eyebrowpoints = new Point[8];
+		eyebrowpoints[0] = landmark.get("left_eyebrow_left_corner");
+		eyebrowpoints[1] = landmark.get("left_eyebrow_lower_left_quarter");
+		eyebrowpoints[2] = landmark.get("left_eyebrow_lower_middle");
+		eyebrowpoints[3] = landmark.get("left_eyebrow_lower_right_quarter");
+		eyebrowpoints[4] = landmark.get("left_eyebrow_right_corner");
+		eyebrowpoints[5] = landmark.get("left_eyebrow_upper_left_quarter");
+		eyebrowpoints[6] = landmark.get("left_eyebrow_upper_middle");
+		eyebrowpoints[7] = landmark.get("left_eyebrow_upper_right_quarter");
+		
+		cp = maxAndMinPoint(eyebrowpoints);
+		start_x = (int)cp.min.x;
+		start_y = (int)cp.min.y;
+		width = (int)(cp.max.x - cp.min.x);
+		height = (int)(cp.max.y - cp.min.y);
+		Bitmap eyebrow = Bitmap.createBitmap(bitmap, start_x, start_y, width, height);
+//		imageView.setImageBitmap(eyebrow);
+		
+		// lip
+		Point[] lippoints = new Point[4];
+		lippoints[0] = landmark.get("mouth_left_corner");
+		lippoints[1] = landmark.get("mouth_right_corner");
+		lippoints[2] = landmark.get("mouth_upper_lip_top");
+		lippoints[3] = landmark.get("mouth_lower_lip_bottom");
+		// without lips
+//		lippoints[2] = landmark.get("mouth_upper_lip_bottom");
+//		lippoints[3] = landmark.get("mouth_lower_lip_top");
+		
+		cp = maxAndMinPoint(lippoints);
+		start_x = (int)cp.min.x;
+		start_y = (int)cp.min.y;
+		width = (int)(cp.max.x - cp.min.x);
+		height = (int)(cp.max.y - cp.min.y);
+		Bitmap lip = Bitmap.createBitmap(bitmap, start_x, start_y, width, height);
+//		imageView.setImageBitmap(lip);
+		
+		// contour
+		Point[] contourpoints = new Point[27];
+		contourpoints[0] = landmark.get("contour_chin");
+		for (int i = 1; i <= 9; i++) {
+			contourpoints[i] = landmark.get("contour_left"+i);
+			contourpoints[i+9] = landmark.get("contour_right"+i);
+		}
+		// with eyebrow
+		for (int i = 0; i < 8; i++) {
+			contourpoints[19+i] = eyebrowpoints[i];
+		}
+		
+		cp = maxAndMinPoint(contourpoints);
+		start_x = (int)cp.min.x;
+		start_y = (int)cp.min.y;
+		width = (int)(cp.max.x - cp.min.x);
+		height = (int)(cp.max.y - cp.min.y);
+		Bitmap contour = Bitmap.createBitmap(bitmap, start_x, start_y, width, height);
+//		imageView.setImageBitmap(contour);
+		
+		face_part[0] = eyes;
+		face_part[1] = eyebrow;
+		face_part[2] = lip;
+		face_part[3] = contour;
+		
+	}
+	
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -143,15 +203,15 @@ public class MainActivity extends Activity {
 			}
 		});
         
+        textView = (TextView)this.findViewById(R.id.textView1);
         
         buttonDetect = (Button)this.findViewById(R.id.button2);
         buttonDetect.setVisibility(View.INVISIBLE);
         buttonDetect.setOnClickListener(new OnClickListener() {
 			public void onClick(View arg0) {
 				
-				prodlg = new ProgressDialog(MainActivity.this);
-				prodlg.setTitle("因为您比较帅\n检测时间较长");
-				prodlg.show();
+				textView.setText("Waiting ...");
+				
 				FaceppDetect faceppDetect = new FaceppDetect();
 				faceppDetect.setDetectCallback(new DetectCallback() {
 					
@@ -176,7 +236,7 @@ public class MainActivity extends Activity {
 							
 							landmark = new HashMap<String, Point>();
 							JSONObject ob;
-							Point p = new Point();
+							Point p;
 							
 							for (int i = 0; i < count; ++i) {
 								float x, y, w, h;
@@ -199,10 +259,10 @@ public class MainActivity extends Activity {
 								h = h / 100 * img.getHeight() * 0.7f;
 
 								//draw the box to mark it out
-								canvas.drawLine(x - w, y - h, x - w, y + h, paint);
-								canvas.drawLine(x - w, y - h, x + w, y - h, paint);
-								canvas.drawLine(x + w, y + h, x - w, y + h, paint);
-								canvas.drawLine(x + w, y + h, x + w, y - h, paint);
+//								canvas.drawLine(x - w, y - h, x - w, y + h, paint);
+//								canvas.drawLine(x - w, y - h, x + w, y - h, paint);
+//								canvas.drawLine(x + w, y + h, x - w, y + h, paint);
+//								canvas.drawLine(x + w, y + h, x + w, y - h, paint);
 								
 								// get landmark
 								ob = face_landmark.getJSONArray("result").getJSONObject(0)
@@ -212,6 +272,7 @@ public class MainActivity extends Activity {
 								
 								while (keys.hasNext()) {
 									String key = (String) keys.next();
+									p = new Point();
 									p.x = (float)ob.getJSONObject(key).getDouble("x");
 									p.y = (float)ob.getJSONObject(key).getDouble("y");
 									
@@ -220,7 +281,7 @@ public class MainActivity extends Activity {
 									p.y = p.y / 100 * img.getHeight();
 									
 									//draw the points to mark it out
-									canvas.drawPoint(p.x, p.y, paint);
+//									canvas.drawPoint(p.x, p.y, paint);
 									
 									landmark.put(key, p);
 								}
@@ -233,10 +294,15 @@ public class MainActivity extends Activity {
 							MainActivity.this.runOnUiThread(new Runnable() {
 								
 								public void run() {
+									
+									// cut the Bitmap... store to "face_part"
+							        cut2four(img, landmark);
+									
 									//show the image
-									imageView.setImageBitmap(img);
-									Toast.makeText(getApplication(), "Finished, "+ count + " faces.",Toast.LENGTH_SHORT).show();
-									prodlg.dismiss();
+//									imageView.setImageBitmap(img);
+//									textView.setText("Finished, "+ count + " faces.");
+							        
+							        // TODO
 								}
 							});
 							
@@ -244,8 +310,7 @@ public class MainActivity extends Activity {
 							e.printStackTrace();
 							MainActivity.this.runOnUiThread(new Runnable() {
 								public void run() {
-									Toast.makeText(getApplication(), "Error",Toast.LENGTH_SHORT).show();
-
+									textView.setText("Error.");
 								}
 							});
 						}
@@ -257,6 +322,7 @@ public class MainActivity extends Activity {
 		});
         
         imageView = (ImageView)this.findViewById(R.id.imageView1);
+        
         imageView.setImageBitmap(img);
     }
 
@@ -290,6 +356,7 @@ public class MainActivity extends Activity {
     			options.inSampleSize = Math.max(1, (int)Math.ceil(Math.max((double)options.outWidth / 1024f, (double)options.outHeight / 1024f)));
     			options.inJustDecodeBounds = false;
     			img = BitmapFactory.decodeFile(fileSrc, options);
+    			textView.setText("Clik Detect. ==>");
     			
     			
     			imageView.setImageBitmap(img);
@@ -298,26 +365,6 @@ public class MainActivity extends Activity {
     		else {
     			Log.d(TAG, "idButSelPic Photopicker canceled");
     		}
-    	} else if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
-    		if (resultCode == RESULT_OK) {
-    			//The Android api ~~~ 
-    			//Log.d(TAG, "idButSelPic Photopicker: " + intent.getDataString());
-    			//Log.d(TAG, "Picture:" + fileSrc);
-    			
-    			//just read size
-    			Options options = new Options();
-    			options.inJustDecodeBounds = true;
-    			//scale size to read
-    			options.inSampleSize = Math.max(1, (int)Math.ceil(Math.max((double)options.outWidth / 1024f, (double)options.outHeight / 1024f)));
-    			options.inJustDecodeBounds = false;
-    			img = BitmapFactory.decodeFile(fileUri.getPath(), options);
-    			imageView.setImageBitmap(img);
-    			buttonDetect.setVisibility(View.VISIBLE);
-            } else if (resultCode == RESULT_CANCELED) {
-                // User cancelled the image capture
-            } else {
-                // Image capture failed, advise user
-            }
     	}
     }
 
@@ -370,8 +417,7 @@ public class MainActivity extends Activity {
 						e.printStackTrace();
 						MainActivity.this.runOnUiThread(new Runnable() {
 							public void run() {
-								Toast.makeText(getApplication(), "Network Error",Toast.LENGTH_SHORT).show();
-
+								textView.setText("Network error.");
 							}
 						});
 					}
@@ -381,35 +427,33 @@ public class MainActivity extends Activity {
     	}
     }
 
-    public void takephoto(View view) {
-    	Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-    	File vFile = new File(Environment.getExternalStorageDirectory()+File.separator+"hdlm2"+File.separator+"img.jpg");
-
-    	if(!vFile.getParentFile().exists()) {
-			File vDirPath = vFile.getParentFile(); //new File(vFile.getParent());
-			vDirPath.mkdirs();
-    	}
-
-    	fileUri = Uri.fromFile(vFile);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
-
-        // start the image capture Intent
-        startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
-    }
-    
-    
-    
     interface DetectCallback {
     	void detectResult(JSONObject face_detect, JSONObject face_landmark);
 	}
     
     private class Point {
-    	 public float x;
-    	 public float y;
-    	 }
-    	 
-    	 private class CutPoint {
-    	 public Point max;
-    	 public Point min;
-    	 }
+    	public float x;
+    	public float y;
+    	
+    	public Point() {
+    		
+    	}
+    	
+    	public Point(float x, float y) {
+    		this.x = x;
+    		this.y = y;
+    	}
+
+		@Override
+		public String toString() {
+			return "Point [x=" + x + ", y=" + y + "]";
+		}
+    	
+    }
+    
+    private class CutPoint {
+    	public Point max;
+    	public Point min;
+    }
+    
 }
