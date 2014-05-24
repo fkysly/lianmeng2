@@ -311,7 +311,7 @@ public class MainActivity extends Activity {
 //									imageView.setImageBitmap(img);
 //									textView.setText("Finished, "+ count + " faces.");
 							        
-							        Toast.makeText(getApplication(), "Finished, "+ count + " faces.",Toast.LENGTH_SHORT).show();
+							        Toast.makeText(getApplication(), "Bingo！解析完成~", Toast.LENGTH_SHORT).show();
 									prodlg.dismiss();
 							        
 							        // TODO 调用函数返回资源准备进入下一个页面
@@ -324,7 +324,7 @@ public class MainActivity extends Activity {
 							prodlg.dismiss();
 							MainActivity.this.runOnUiThread(new Runnable() {
 								public void run() {
-									Toast.makeText(getApplication(), "Error",Toast.LENGTH_SHORT).show();
+									Toast.makeText(getApplication(), "网络有点问题，请重试一下",Toast.LENGTH_SHORT).show();
 									
 								}
 							});
