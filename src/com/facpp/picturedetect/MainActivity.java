@@ -327,7 +327,15 @@ public class MainActivity extends Activity {
 									prodlg.dismiss();
 							        
 							        // TODO 调用函数返回资源准备进入下一个页面
-									//int[] resourceArray = new int[4];
+									int[] resourceArray = new int[4];
+									resourceArray[0] = R.drawable.facepp_icon;
+									resourceArray[1] = R.drawable.facepp_icon;
+									resourceArray[2] = R.drawable.facepp_icon;
+									resourceArray[3] = R.drawable.facepp_icon;
+									//这里调用一个函数,把resourceArray赋值
+									Intent intent = new Intent(MainActivity.this,ResultActivity.class);
+									intent.putExtra("resource", resourceArray);
+									startActivity(intent);
 									
 								}
 							});
@@ -427,7 +435,7 @@ public class MainActivity extends Activity {
 				
 				public void run() {
 					HttpRequests httpRequests = new HttpRequests("4480afa9b8b364e30ba03819f3e9eff5", "Pz9VFT8AP3g_Pz8_dz84cRY_bz8_Pz8M", true, false);
-					httpRequests.setHttpTimeOut(7000);
+					httpRequests.setHttpTimeOut(14000);
 					//Log.v(TAG, "image size : " + img.getWidth() + " " + img.getHeight());
 		    		
 		    		ByteArrayOutputStream stream = new ByteArrayOutputStream();
