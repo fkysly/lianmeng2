@@ -222,20 +222,8 @@ public class MainActivity extends Activity {
 				FaceppDetect faceppDetect = new FaceppDetect();
 				faceppDetect.setDetectCallback(new DetectCallback() {
 					
-					public void detectResult(JSONObject face_detect, JSONObject face_landmark, boolean flag) {
+					public void detectResult(JSONObject face_detect, JSONObject face_landmark) {
 						
-						// no face
-						if (!flag) {
-							MainActivity.this.runOnUiThread(new Runnable() {
-								
-								public void run() {
-									
-									Toast.makeText(getApplication(), "你人呢，没有检测到脸啊！",Toast.LENGTH_LONG).show();
-								}
-							});
-							
-							return ;
-						}
 						
 						//Log.v(TAG, face_detect.toString());
 						
@@ -455,22 +443,25 @@ public class MainActivity extends Activity {
 							
 							//finished , then call the callback function
 							if (callback != null && face_id != null) {
-								callback.detectResult(face_detect, face_landmark, true);
+								callback.detectResult(face_detect, face_landmark);
 							}
 						} catch (JSONException e) {
-							prodlg.dismiss();
-							callback.detectResult(face_detect, face_landmark, false);
+							MainActivity.this.runOnUiThread(new Runnable() {
+								public void run() {
+									Toast.makeText(getApplication(), "你人呢，没有检测到脸啊！",Toast.LENGTH_LONG).show();
+								}
+							});
 							
 						}
 						
 					} catch (FaceppParseException e) {
-						prodlg.dismiss();
 						MainActivity.this.runOnUiThread(new Runnable() {
 							public void run() {
-								Toast.makeText(getApplication(), "Network Error",Toast.LENGTH_SHORT).show();
+								Toast.makeText(getApplication(), "亲，网络超时了啊，请检查一下",Toast.LENGTH_SHORT).show();
 							}
 						});
 					}
+		    		prodlg.dismiss();
 					
 				}
 			}).start();
@@ -494,7 +485,7 @@ public class MainActivity extends Activity {
     }
 
     interface DetectCallback {
-    	void detectResult(JSONObject face_detect, JSONObject face_landmark, boolean flag);
+    	void detectResult(JSONObject face_detect, JSONObject face_landmark);
 	}
     
     private class Point {
