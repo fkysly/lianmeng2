@@ -2,6 +2,8 @@ package com.facpp.picturedetect;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,6 +44,8 @@ import com.facepp.http.PostParameters;
  * @author moon5ckq
  */
 public class MainActivity extends Activity {
+	
+	HashMap<String, Point> landmark;
 
 	final private static String TAG = "MainActivity";
 	final private int PICTURE_CHOOSE = 1;
@@ -82,8 +86,8 @@ public class MainActivity extends Activity {
 				FaceppDetect faceppDetect = new FaceppDetect();
 				faceppDetect.setDetectCallback(new DetectCallback() {
 					
-					public void detectResult(JSONObject rst) {
-						//Log.v(TAG, rst.toString());
+					public void detectResult(JSONObject face_detect, JSONObject face_landmark) {
+						//Log.v(TAG, face_detect.toString());
 						
 						//use the red paint
 						Paint paint = new Paint();
@@ -98,19 +102,25 @@ public class MainActivity extends Activity {
 						
 						try {
 							//find out all faces
-							final int count = rst.getJSONArray("face").length();
+							final int count = face_detect.getJSONArray("face").length();
+							
+							
+							landmark = new HashMap<String, Point>();
+							JSONObject ob;
+							Point p = new Point();
+							
 							for (int i = 0; i < count; ++i) {
 								float x, y, w, h;
 								//get the center point
-								x = (float)rst.getJSONArray("face").getJSONObject(i)
+								x = (float)face_detect.getJSONArray("face").getJSONObject(i)
 										.getJSONObject("position").getJSONObject("center").getDouble("x");
-								y = (float)rst.getJSONArray("face").getJSONObject(i)
+								y = (float)face_detect.getJSONArray("face").getJSONObject(i)
 										.getJSONObject("position").getJSONObject("center").getDouble("y");
 
 								//get face size
-								w = (float)rst.getJSONArray("face").getJSONObject(i)
+								w = (float)face_detect.getJSONArray("face").getJSONObject(i)
 										.getJSONObject("position").getDouble("width");
-								h = (float)rst.getJSONArray("face").getJSONObject(i)
+								h = (float)face_detect.getJSONArray("face").getJSONObject(i)
 										.getJSONObject("position").getDouble("height");
 								
 								//change percent value to the real size
@@ -124,6 +134,28 @@ public class MainActivity extends Activity {
 								canvas.drawLine(x - w, y - h, x + w, y - h, paint);
 								canvas.drawLine(x + w, y + h, x - w, y + h, paint);
 								canvas.drawLine(x + w, y + h, x + w, y - h, paint);
+								
+								// get landmark
+								ob = face_landmark.getJSONArray("result").getJSONObject(0)
+										.getJSONObject("landmark");
+								
+								Iterator<String> keys = ob.keys();
+								
+								while (keys.hasNext()) {
+									String key = (String) keys.next();
+									p.x = (float)ob.getJSONObject(key).getDouble("x");
+									p.y = (float)ob.getJSONObject(key).getDouble("y");
+									
+									//change percent value to the real size
+									p.x = p.x / 100 * img.getWidth();
+									p.y = p.y / 100 * img.getHeight();
+									
+									//draw the points to mark it out
+									canvas.drawPoint(p.x, p.y, paint);
+									
+									landmark.put(key, p);
+								}
+							
 							}
 							
 							//save new image
@@ -247,11 +279,23 @@ public class MainActivity extends Activity {
 		    		byte[] array = stream.toByteArray();
 		    		
 		    		try {
-		    			//detect
-						JSONObject result = httpRequests.detectionDetect(new PostParameters().setImg(array));
+		    			//detection-detect
+						JSONObject face_detect = httpRequests.detectionDetect(new PostParameters().setImg(array));
+						
+						String face_id = null;
+						
+						// get face_id
+						try {
+							face_id = face_detect.getJSONArray("face").getJSONObject(0).getString("face_id");
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+						JSONObject face_landmark = httpRequests.detectionLandmark(new PostParameters().setFaceId(face_id));
+						// 
+						
 						//finished , then call the callback function
-						if (callback != null) {
-							callback.detectResult(result);
+						if (callback != null && face_id != null) {
+							callback.detectResult(face_detect, face_landmark);
 						}
 					} catch (FaceppParseException e) {
 						e.printStackTrace();
@@ -287,6 +331,6 @@ public class MainActivity extends Activity {
     
     
     interface DetectCallback {
-    	void detectResult(JSONObject rst);
+    	void detectResult(JSONObject face_detect, JSONObject face_landmark);
 	}
 }
