@@ -14,23 +14,35 @@
         android:id="@+id/button1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="10dp"
-        android:text="Get Image" />
+        android:paddingLeft="7dp"
+        android:paddingRight="7dp"
+        android:layout_marginLeft="5dp"
+        android:background="@drawable/btn_selector"
+        android:textColor="#ffffff"
+        android:text="Open" />
         
         <Button
         android:id="@+id/capture"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="10dp"
+        android:paddingLeft="7dp"
+        android:paddingRight="7dp"
+        android:layout_marginLeft="5dp"
+        android:background="@drawable/btn_selector"
+        android:textColor="#ffffff"
         android:onClick="takephoto"
-        android:text="TAP" />
+        android:text="Camera" />
 
     <Button
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="10dp"
-        android:text="Detect" />
+        android:paddingLeft="7dp"
+        android:paddingRight="7dp"
+        android:layout_marginLeft="5dp"
+        android:background="@drawable/btn_selector"
+        android:textColor="#ffffff"
+        android:text="Create" />
 
     
     
