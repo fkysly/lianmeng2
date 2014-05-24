@@ -1,11 +1,13 @@
 package com.facpp.picturedetect;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -15,7 +17,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.provider.MediaStore.Images.ImageColumns;
 import android.util.Log;
 import android.view.Menu;
@@ -24,6 +29,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facepp.error.FaceppParseException;
 import com.facepp.http.HttpRequests;
@@ -43,8 +49,10 @@ public class MainActivity extends Activity {
 	private ImageView imageView = null;
 	private Bitmap img = null;
 	private Button buttonDetect = null;
-	private TextView textView = null;
 	
+	private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
+	private Uri fileUri;
+	private ProgressDialog prodlg;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,15 +70,15 @@ public class MainActivity extends Activity {
 			}
 		});
         
-        textView = (TextView)this.findViewById(R.id.textView1);
         
         buttonDetect = (Button)this.findViewById(R.id.button2);
         buttonDetect.setVisibility(View.INVISIBLE);
         buttonDetect.setOnClickListener(new OnClickListener() {
 			public void onClick(View arg0) {
 				
-				textView.setText("Waiting ...");
-				
+				prodlg = new ProgressDialog(MainActivity.this);
+				prodlg.setTitle("因为您比较帅\n检测时间较长");
+				prodlg.show();
 				FaceppDetect faceppDetect = new FaceppDetect();
 				faceppDetect.setDetectCallback(new DetectCallback() {
 					
@@ -126,7 +134,8 @@ public class MainActivity extends Activity {
 								public void run() {
 									//show the image
 									imageView.setImageBitmap(img);
-									textView.setText("Finished, "+ count + " faces.");
+									Toast.makeText(getApplication(), "Finished, "+ count + " faces.",Toast.LENGTH_SHORT).show();
+									prodlg.dismiss();
 								}
 							});
 							
@@ -134,7 +143,8 @@ public class MainActivity extends Activity {
 							e.printStackTrace();
 							MainActivity.this.runOnUiThread(new Runnable() {
 								public void run() {
-									textView.setText("Error.");
+									Toast.makeText(getApplication(), "Error",Toast.LENGTH_SHORT).show();
+
 								}
 							});
 						}
@@ -179,7 +189,6 @@ public class MainActivity extends Activity {
     			options.inSampleSize = Math.max(1, (int)Math.ceil(Math.max((double)options.outWidth / 1024f, (double)options.outHeight / 1024f)));
     			options.inJustDecodeBounds = false;
     			img = BitmapFactory.decodeFile(fileSrc, options);
-    			textView.setText("Clik Detect. ==>");
     			
     			
     			imageView.setImageBitmap(img);
@@ -188,6 +197,26 @@ public class MainActivity extends Activity {
     		else {
     			Log.d(TAG, "idButSelPic Photopicker canceled");
     		}
+    	} else if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
+    		if (resultCode == RESULT_OK) {
+    			//The Android api ~~~ 
+    			//Log.d(TAG, "idButSelPic Photopicker: " + intent.getDataString());
+    			//Log.d(TAG, "Picture:" + fileSrc);
+    			
+    			//just read size
+    			Options options = new Options();
+    			options.inJustDecodeBounds = true;
+    			//scale size to read
+    			options.inSampleSize = Math.max(1, (int)Math.ceil(Math.max((double)options.outWidth / 1024f, (double)options.outHeight / 1024f)));
+    			options.inJustDecodeBounds = false;
+    			img = BitmapFactory.decodeFile(fileUri.getPath(), options);
+    			imageView.setImageBitmap(img);
+    			buttonDetect.setVisibility(View.VISIBLE);
+            } else if (resultCode == RESULT_CANCELED) {
+                // User cancelled the image capture
+            } else {
+                // Image capture failed, advise user
+            }
     	}
     }
 
@@ -228,7 +257,8 @@ public class MainActivity extends Activity {
 						e.printStackTrace();
 						MainActivity.this.runOnUiThread(new Runnable() {
 							public void run() {
-								textView.setText("Network error.");
+								Toast.makeText(getApplication(), "Network Error",Toast.LENGTH_SHORT).show();
+
 							}
 						});
 					}
@@ -238,6 +268,24 @@ public class MainActivity extends Activity {
     	}
     }
 
+    public void takephoto(View view) {
+    	Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+    	File vFile = new File(Environment.getExternalStorageDirectory()+File.separator+"hdlm2"+File.separator+"img.jpg");
+
+    	if(!vFile.getParentFile().exists()) {
+			File vDirPath = vFile.getParentFile(); //new File(vFile.getParent());
+			vDirPath.mkdirs();
+    	}
+
+    	fileUri = Uri.fromFile(vFile);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
+
+        // start the image capture Intent
+        startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+    }
+    
+    
+    
     interface DetectCallback {
     	void detectResult(JSONObject rst);
 	}
