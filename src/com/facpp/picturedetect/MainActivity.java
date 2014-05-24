@@ -1,5 +1,6 @@
 package com.facpp.picturedetect;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.HashMap;
@@ -30,7 +31,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facepp.error.FaceppParseException;
@@ -146,7 +146,7 @@ public class MainActivity extends Activity {
 		width = (int)(cp.max.x - cp.min.x);
 		height = (int)(cp.max.y - cp.min.y);
 		Bitmap eyebrow = Bitmap.createBitmap(bitmap, start_x, start_y, width, height);
-//		imageView.setImageBitmap(eyebrow);
+//		imageView.setImageBitmap(eye brow);
 		
 		// lip
 		Point[] lippoints = new Point[4];
@@ -316,10 +316,10 @@ public class MainActivity extends Activity {
 							        
 							        // TODO 调用函数返回资源准备进入下一个页面
 									int[] resourceArray = new int[4];
-									resourceArray[0] = R.drawable.facepp_icon;
-									resourceArray[1] = R.drawable.facepp_icon;
-									resourceArray[2] = R.drawable.facepp_icon;
-									resourceArray[3] = R.drawable.facepp_icon;
+									
+									resourceArray = Transefer.transfertoCartoon(face_part, getApplicationContext());
+									
+									
 									//这里调用一个函数,把resourceArray赋值
 									Intent intent = new Intent(MainActivity.this,ResultActivity.class);
 									intent.putExtra("resource", resourceArray);
@@ -379,7 +379,7 @@ public class MainActivity extends Activity {
     			options.inSampleSize = Math.max(1, (int)Math.ceil(Math.max((double)options.outWidth / 1024f, (double)options.outHeight / 1024f)));
     			options.inJustDecodeBounds = false;
     			img = BitmapFactory.decodeFile(fileSrc, options);
-    			
+    			Log.d(TAG,img.getWidth() + " "+img.getHeight());
     			
     			imageView.setImageBitmap(img);
     			buttonDetect.setVisibility(View.VISIBLE);
@@ -396,10 +396,13 @@ public class MainActivity extends Activity {
     			//just read size
     			Options options = new Options();
     			options.inJustDecodeBounds = true;
+    			img = BitmapFactory.decodeFile(fileUri.getPath(), options);
+    			
     			//scale size to read
     			options.inSampleSize = Math.max(1, (int)Math.ceil(Math.max((double)options.outWidth / 1024f, (double)options.outHeight / 1024f)));
     			options.inJustDecodeBounds = false;
     			img = BitmapFactory.decodeFile(fileUri.getPath(), options);
+    			
     			imageView.setImageBitmap(img);
     			buttonDetect.setVisibility(View.VISIBLE);
             } else if (resultCode == RESULT_CANCELED) {

@@ -5,6 +5,7 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 
 public class ResultActivity extends Activity {
@@ -23,8 +24,9 @@ public class ResultActivity extends Activity {
 	protected void onResume() {
 		Resources resource = getResources();
 		Drawable[] layers = new Drawable[4];
-		for (int i=0; i<4;i++) {
-			layers[i] = resource.getDrawable(resourceArray[i]); 
+		for (int i=0; i<=3;i++) {
+//			Log.d("hello",resourceArray[i]);
+			layers[3-i] = resource.getDrawable(resourceArray[i]); 
 
 		}
 		LayerDrawable layerDrawable = new LayerDrawable(layers); 
