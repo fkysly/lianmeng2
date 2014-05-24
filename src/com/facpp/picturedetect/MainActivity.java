@@ -216,7 +216,7 @@ public class MainActivity extends Activity {
 			public void onClick(View arg0) {
 				
 				prodlg = new ProgressDialog(MainActivity.this);
-				prodlg.setMessage("因为您比较酷, 检测时间较长");
+				prodlg.setMessage("因为您比较酷, 检测需要点时间...");
 				prodlg.show();
 				
 				FaceppDetect faceppDetect = new FaceppDetect();
@@ -465,7 +465,7 @@ public class MainActivity extends Activity {
 					} catch (FaceppParseException e) {
 						MainActivity.this.runOnUiThread(new Runnable() {
 							public void run() {
-								Toast.makeText(getApplication(), "亲，网络超时了啊，请检查一下",Toast.LENGTH_SHORT).show();
+								Toast.makeText(getApplication(), "亲，网络有点问题~",Toast.LENGTH_SHORT).show();
 							}
 						});
 					}
