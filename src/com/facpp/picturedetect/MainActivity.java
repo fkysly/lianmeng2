@@ -326,7 +326,9 @@ public class MainActivity extends Activity {
 							        Toast.makeText(getApplication(), "Finished, "+ count + " faces.",Toast.LENGTH_SHORT).show();
 									prodlg.dismiss();
 							        
-							        // TODO
+							        // TODO 调用函数返回资源准备进入下一个页面
+									//int[] resourceArray = new int[4];
+									
 								}
 							});
 							
