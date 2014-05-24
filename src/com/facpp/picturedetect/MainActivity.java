@@ -431,7 +431,7 @@ public class MainActivity extends Activity {
 		    		
 		    		try {
 		    			//detection-detect
-						JSONObject face_detect = httpRequests.detectionDetect(new PostParameters().setImg(array));
+						JSONObject face_detect = httpRequests.detectionDetect(new PostParameters().setMode("oneface").setImg(array));
 						JSONObject face_landmark = null;
 						String face_id = null;
 						
