@@ -30,7 +30,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facepp.error.FaceppParseException;
@@ -45,7 +44,8 @@ import com.facepp.http.PostParameters;
  */
 public class MainActivity extends Activity {
 	
-	HashMap<String, Point> landmark;
+	public HashMap<String, Point> landmark;
+	public int[] face_part; // five face part
 
 	final private static String TAG = "MainActivity";
 	final private int PICTURE_CHOOSE = 1;
@@ -57,6 +57,75 @@ public class MainActivity extends Activity {
 	private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
 	private Uri fileUri;
 	private ProgressDialog prodlg;
+	
+	private boolean max(float x, float y) {
+		if (x > y) return true;
+		return false;
+	}
+	
+	private boolean min(float x, float y) {
+		if (x < y) return true;
+		return false;
+	}
+	
+	private CutPoint maxAndMinPoint(Point[] points) {
+		CutPoint cp = new CutPoint();
+		for (Point point : points) {
+			 	if (max(point.y, cp.max.y)) {
+			 		cp.max.y = point.y;
+			 	}
+			 	if (max(point.x, cp.max.x)) {
+			 		cp.max.x = point.x;
+			 	}
+			 	if (min(point.y, cp.min.y)) {
+			 		cp.min.y = point.y;
+			 	}
+			 	if (min(point.x, cp.min.x)) {
+			 		cp.min.x = point.x;
+			 	}
+			 	
+			 }
+			 return cp;
+	}
+	
+	/**
+	 +	 * cut Bitmap to four parts
+	 +	 * @param bitmap
+	 +	 * @param landmark
+	 +	 * @return
+	 +	 */
+	 private int[] cut2four(Bitmap bitmap, HashMap<String, Point> landmark) {
+	 CutPoint cp = new CutPoint();
+	 int start_x, start_y, width, height; 
+	 
+	 // eyes
+	 Point[] eyepoints = null;
+	 eyepoints[0] = landmark.get("left_eye_bottom");
+	 eyepoints[1] = landmark.get("left_eye_center");
+	 eyepoints[2] = landmark.get("left_eye_left_corner");
+	 eyepoints[3] = landmark.get("left_eye_lower_left_quarter");
+	 eyepoints[4] = landmark.get("left_eye_lower_right_quarter");
+	 eyepoints[5] = landmark.get("left_eye_pupil");
+	 eyepoints[6] = landmark.get("left_eye_right_corner");
+	 eyepoints[7] = landmark.get("left_eye_top");
+	 eyepoints[8] = landmark.get("left_eye_upper_left_quarter");
+	 eyepoints[9] = landmark.get("left_eye_upper_right_quarter");
+	 cp = maxAndMinPoint(eyepoints);
+	 start_x = (int)cp.min.x;
+	 start_y = (int)cp.min.y;
+	 width = (int)(cp.max.x - cp.min.x);
+	 height = (int)(cp.max.y - cp.min.y);
+	 Bitmap eyes = Bitmap.createBitmap(bitmap, start_x, start_y, width, height);
+	 imageView.setImageBitmap(img);
+	 
+	 // eyebrow
+	 
+	 // lip
+	 
+	 // contour
+	 
+	 return null;
+	 }
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -333,4 +402,14 @@ public class MainActivity extends Activity {
     interface DetectCallback {
     	void detectResult(JSONObject face_detect, JSONObject face_landmark);
 	}
+    
+    private class Point {
+    	 public float x;
+    	 public float y;
+    	 }
+    	 
+    	 private class CutPoint {
+    	 public Point max;
+    	 public Point min;
+    	 }
 }
