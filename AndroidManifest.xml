@@ -22,7 +22,7 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.facpp.picturedetect.FirstActivity"
-            android:label="Facepp Android Detect Demo" >
+            android:label="像不像" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -31,7 +31,7 @@
         </activity>
         <activity
             android:name="com.facpp.picturedetect.MainActivity"
-            android:label="Facepp Android Detect Demo" >
+            android:label="像不像" >
         </activity>
         <activity
             android:name="com.facpp.picturedetect.ResultActivity"
