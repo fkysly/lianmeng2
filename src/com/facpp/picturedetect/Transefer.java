@@ -1,6 +1,12 @@
 package com.facpp.picturedetect;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -16,15 +22,18 @@ public class Transefer {
 	
 	public static final int EYEBROW_N = 16; //s6 16
 	
-	public static final int LIP_N = 41; //s8 41
+//	public static final int LIP_N = 41; //s8 41
 	
-	public static final int COU_N = 17; //s4 17
+//	public static final int COU_N = 17; //s4 17
 	
-	public static Bitmap[] eyebitmap, eyebrowbitmap, lipbitmap, coubitmap;
+	public static Bitmap[] eyebitmap, eyebrowbitmap;
+//							lipbitmap,
+//							coubitmap;
 	
-	public static int[][] eyebitmaph, eyebrowbitmaph, lipbitmaph, coubitmaph;
+	public static int[][] eyebitmaph, eyebrowbitmaph;
+//	lipbitmaph, coubitmaph;
 	
-	public static int[] transfertoCartoon(Bitmap[] bitmaps, Context context){
+	public static int[] transfertoCartoon(Bitmap[] bitmaps, Context context,HashMap landmark){
 		
 		int[] result = new int[4];
 		
@@ -34,13 +43,14 @@ public class Transefer {
 		eyebrowbitmap = new Bitmap[EYEBROW_N];
 		eyebrowbitmaph = new int[EYEBROW_N][bitmaps[1].getWidth() * bitmaps[1].getHeight()];
 		
-		lipbitmap = new Bitmap[LIP_N];
-		lipbitmaph = new int[LIP_N][bitmaps[2].getWidth() * bitmaps[2].getHeight()];
-		
-		coubitmap = new Bitmap[COU_N];
-		coubitmaph = new int[COU_N][bitmaps[3].getWidth() * bitmaps[3].getHeight()];
+//		lipbitmap = new Bitmap[LIP_N];
+//		lipbitmaph = new int[LIP_N][bitmaps[2].getWidth() * bitmaps[2].getHeight()];
+////		
+//		coubitmap = new Bitmap[COU_N];
+//		coubitmaph = new int[COU_N][bitmaps[3].getWidth() * bitmaps[3].getHeight()];
 		Field field = null;
 		int resourceId = 0;
+		Log.d("hello1", "ggg");
 		
 		try {
 			for (int i = 0; i < EYE_N; i++) {
@@ -52,14 +62,14 @@ public class Transefer {
 				}
 			}
 			
-			for (int i = 0; i < LIP_N; i++) {
-				field = R.drawable.class.getDeclaredField("cut_s8_" + i);
-				resourceId = Integer.parseInt(field.get(null).toString());
-				lipbitmap[i] = BitmapFactory.decodeResource(context.getResources(), resourceId);
-				if (lipbitmaph[i] != null) {
-					lipbitmaph[i] = getHistogram(lipbitmap[i]);
-				}
-			}
+//			for (int i = 0; i < LIP_N; i++) {
+//				field = R.drawable.class.getDeclaredField("cut_s8_" + i);
+//				resourceId = Integer.parseInt(field.get(null).toString());
+//				lipbitmap[i] = BitmapFactory.decodeResource(context.getResources(), resourceId);
+//				if (lipbitmaph[i] != null) {
+//					lipbitmaph[i] = getHistogram(lipbitmap[i]);
+//				}
+//			}
 			
 			for (int i = 0; i < EYEBROW_N; i++) {
 				field = R.drawable.class.getDeclaredField("cut_s6_" + i);
@@ -70,16 +80,16 @@ public class Transefer {
 				}
 			}
 			
-			for (int i = 0; i < COU_N; i++) {
-				field = R.drawable.class.getDeclaredField("cut_s4_" + i);
-				resourceId = Integer.parseInt(field.get(null).toString());
-				coubitmap[i] = BitmapFactory.decodeResource(context.getResources(), resourceId);
-				Log.d("hello","s4_" + i+"");
-				if (coubitmaph[i] != null) {
-					coubitmaph[i] = getHistogram(coubitmap[i]);
-				}
-			}
-		//Log.d("hello", resourceId + "");
+//			for (int i = 0; i < COU_N; i++) {
+//				field = R.drawable.class.getDeclaredField("cut_s4_" + i);
+//				resourceId = Integer.parseInt(field.get(null).toString());
+//				coubitmap[i] = BitmapFactory.decodeResource(context.getResources(), resourceId);
+//				Log.d("hello","s4_" + i+"");
+//				if (coubitmaph[i] != null) {
+//					coubitmaph[i] = getHistogram(coubitmap[i]);
+//				}
+//			}
+		Log.d("hello1", resourceId + "");
 		int[] bitmaph;
 		for(int i = 0; i < 4; i++) {
 			binary(bitmaps[i]);
@@ -94,11 +104,12 @@ public class Transefer {
 				field = R.drawable.class.getDeclaredField("s6_" + result[i]);
 				break;
 			case 2:
-				result[i] = compare(bitmaps[i], bitmaph, lipbitmap, lipbitmaph, LIP_N);
-				field = R.drawable.class.getDeclaredField("s8_" + result[i]);
+//				result[i] = compare(bitmaps[i], bitmaph, lipbitmap, lipbitmaph, LIP_N);
+//				field = R.drawable.class.getDeclaredField("s8_" + result[i]);
+				field = R.drawable.class.getDeclaredField("s8_0");
 				break;
 			case 3:
-				result[i] = compare(bitmaps[i], bitmaph, coubitmap, coubitmaph, COU_N);
+				result[i] = compareContour(context,landmark);
 				field = R.drawable.class.getDeclaredField("s4_" + result[i]);
 				break;
 			}
@@ -153,11 +164,11 @@ public class Transefer {
 		float total1 = 0.0f;
 		float total2 = 0.0f;
 		
-		total1 = mybitmap.getWidth();
+		total1 = mybitmap.getWidth() * mybitmap.getHeight();
 		for (int i = 0; i < Cat_n; i++) {
 			similarity = 0.0;
 			
-			total2 = catbitmap[i].getWidth();
+			total2 = catbitmap[i].getWidth() * catbitmap[i].getHeight();
 			
 			for (int j = 0; j < catbitmaph[i].length; j++) {
 				similarity += Math.sqrt(((double)mybitmaph[j]) / total1 * ((double)catbitmaph[i][j]) / total2);
@@ -167,6 +178,7 @@ public class Transefer {
 				maxSimilarity = similarity;
 				maxPos = i;
 			}
+			Log.d("asd", "s "+similarity);
 		}
 		
 		return maxPos; 
@@ -222,6 +234,79 @@ public class Transefer {
 		}
 		
 		return itensity;
+	}
+	
+	private static int compareContour(Context context, HashMap landmark){
+		Log.d("hello1", "enter");
+		InputStreamReader inputReader = null;
+		try {
+			inputReader = new InputStreamReader( context.getResources().getAssets().open("pointMap") );
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		BufferedReader bufReader = new BufferedReader(inputReader);
+		String line="";
+		String[] str = new String[3];
+		HashMap<String,Point> hashmap = new HashMap<String, Point>();
+		Point p;
+		int count = 0;
+		float x, y;
+		double max =0.0;
+		int maxpos = 0;
+		try {
+			while((line = bufReader.readLine()) != null){
+				str = line.split(",");
+				x = Float.parseFloat(str[1].substring(2));
+				y = Float.parseFloat(str[2].substring(2));
+				p = new Point(x, y);
+				hashmap.put(str[0], p);
+				if ((count+1) % 19 == 0) {
+					double temp=cos(hashmap, landmark);
+					if(temp>max){
+						max=temp;
+						maxpos=(count+1) / 19;
+					}
+					hashmap.clear();
+				}
+				count++;
+				Log.d("hello1", ""+count);
+			}
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return maxpos;
+	}
+	
+	private static double cos(HashMap hashmap,HashMap landmark){
+		
+		double x = 0, y = 0, z = 0;
+		Iterator iterator1, iterator2;
+		double a_dis, b_dis;
+		Entry e;
+		Point a, b;
+		for(int i = 0; i<19;i++){
+			e = (Entry)hashmap.entrySet().iterator().next();
+			a = (Point)e.getValue();
+			a_dis = a.dis;
+			e = (Entry)landmark.entrySet().iterator().next();
+			b = (Point)e.getValue();
+			b_dis = b.dis;
+		    x = a_dis * a_dis;
+		    y = b_dis * b_dis;
+		    z = a_dis * b_dis;
+		}
+				
+		x = Math.sqrt(x);
+
+		y = Math.sqrt(y);
+
+		return z/(x*y);
 	}
 
 }

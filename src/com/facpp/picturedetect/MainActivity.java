@@ -1,6 +1,5 @@
 package com.facpp.picturedetect;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.HashMap;
@@ -58,6 +57,8 @@ public class MainActivity extends Activity {
 	private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
 	private Uri fileUri;
 	private ProgressDialog prodlg;
+	private String gender = null;
+	private Double smiling = 0.0;
 	
 	private boolean max(float x, float y) {
 		if (x > y)
@@ -104,6 +105,11 @@ public class MainActivity extends Activity {
 	 * @return
 	 */
 	private void cut2four(Bitmap bitmap, HashMap<String, Point> landmark) {
+		//use the red paint
+		Paint paint = new Paint();
+		paint.setColor(Color.BLACK);
+		paint.setStrokeWidth(Math.max(img.getWidth(), img.getHeight()) / 100f);
+		
 		CutPoint cp = new CutPoint();
 		cp.max = new Point();
 		cp.min = new Point();
@@ -130,22 +136,32 @@ public class MainActivity extends Activity {
 		Bitmap eyes = Bitmap.createBitmap(bitmap, start_x, start_y, width, height);
 		
 		// eyebrow
-		Point[] eyebrowpoints = new Point[8];
-		eyebrowpoints[0] = landmark.get("left_eyebrow_left_corner");
-		eyebrowpoints[1] = landmark.get("left_eyebrow_lower_left_quarter");
-		eyebrowpoints[2] = landmark.get("left_eyebrow_lower_middle");
-		eyebrowpoints[3] = landmark.get("left_eyebrow_lower_right_quarter");
-		eyebrowpoints[4] = landmark.get("left_eyebrow_right_corner");
-		eyebrowpoints[5] = landmark.get("left_eyebrow_upper_left_quarter");
-		eyebrowpoints[6] = landmark.get("left_eyebrow_upper_middle");
-		eyebrowpoints[7] = landmark.get("left_eyebrow_upper_right_quarter");
-		
-		cp = maxAndMinPoint(eyebrowpoints);
-		start_x = (int)cp.min.x;
-		start_y = (int)cp.min.y;
-		width = (int)(cp.max.x - cp.min.x);
-		height = (int)(cp.max.y - cp.min.y);
-		Bitmap eyebrow = Bitmap.createBitmap(bitmap, start_x, start_y, width, height);
+        Point[] eyebrowpoints = new Point[9];
+        eyebrowpoints[0] = landmark.get("left_eyebrow_left_corner");
+        eyebrowpoints[1] = landmark.get("left_eyebrow_lower_left_quarter");
+        eyebrowpoints[2] = landmark.get("left_eyebrow_lower_middle");
+        eyebrowpoints[3] = landmark.get("left_eyebrow_lower_right_quarter");
+        eyebrowpoints[7] = landmark.get("left_eyebrow_upper_left_quarter");
+        eyebrowpoints[6] = landmark.get("left_eyebrow_upper_middle");
+        eyebrowpoints[5] = landmark.get("left_eyebrow_upper_right_quarter");
+        eyebrowpoints[4] = landmark.get("left_eyebrow_right_corner");
+        eyebrowpoints[8] = eyebrowpoints[0];
+
+        cp = maxAndMinPoint(eyebrowpoints);
+        start_x = (int)cp.min.x;
+        start_y = (int)cp.min.y;
+        width = (int)(cp.max.x - cp.min.x);
+        height = (int)(cp.max.y - cp.min.y);
+//      Bitmap eyebrow = Bitmap.createBitmap(bitmap, start_x, start_y, width, height);
+        // draw line eyebrow
+        Bitmap eyebrow = Bitmap.createBitmap(img.getWidth(), img.getHeight(), img.getConfig());
+        Canvas canvas = new Canvas(eyebrow);
+        for (int i = 0; i < 8 ; i++) {
+            canvas.drawLine(eyebrowpoints[i].x,eyebrowpoints[i].y,eyebrowpoints[i+1].x,eyebrowpoints[i+1].y, paint);
+        }
+
+        
+        eyebrow = Bitmap.createBitmap(eyebrow, start_x, start_y, width, height);
 //		imageView.setImageBitmap(eye brow);
 		
 		// lip
@@ -315,14 +331,17 @@ public class MainActivity extends Activity {
 									prodlg.dismiss();
 							        
 							        // TODO 调用函数返回资源准备进入下一个页面
-									int[] resourceArray = new int[4];
+									int[] resourceArray = new int[5];
 									
-									resourceArray = Transefer.transfertoCartoon(face_part, getApplicationContext());
+									resourceArray = Transefer.transfertoCartoon(face_part, getApplicationContext(),landmark);
+									
 									
 									
 									//这里调用一个函数,把resourceArray赋值
 									Intent intent = new Intent(MainActivity.this,ResultActivity.class);
 									intent.putExtra("resource", resourceArray);
+									intent.putExtra("gender", gender);
+									intent.putExtra("smiling", smiling);
 									startActivity(intent);
 									
 								}
@@ -442,13 +461,16 @@ public class MainActivity extends Activity {
 		    		
 		    		try {
 		    			//detection-detect
-						JSONObject face_detect = httpRequests.detectionDetect(new PostParameters().setMode("oneface").setImg(array));
+						JSONObject face_detect = httpRequests.detectionDetect(new PostParameters().setMode("oneface").setAttribute("gender,age,race,smiling,glass,pose").setImg(array));
 						JSONObject face_landmark = null;
 						String face_id = null;
+						
 						
 						// get face_id
 						try {
 							face_id = face_detect.getJSONArray("face").getJSONObject(0).getString("face_id");
+							gender = face_detect.getJSONArray("face").getJSONObject(0).getJSONObject("attribute").getJSONObject("gender").getString("value");
+							smiling = face_detect.getJSONArray("face").getJSONObject(0).getJSONObject("attribute").getJSONObject("smiling").getDouble("value");
 							face_landmark = httpRequests.detectionLandmark(new PostParameters().setFaceId(face_id));
 							// 
 							
@@ -498,30 +520,5 @@ public class MainActivity extends Activity {
     interface DetectCallback {
     	void detectResult(JSONObject face_detect, JSONObject face_landmark);
 	}
-    
-    private class Point {
-    	public float x;
-    	public float y;
-    	
-    	public Point() {
-    		
-    	}
-    	
-    	public Point(float x, float y) {
-    		this.x = x;
-    		this.y = y;
-    	}
-
-		@Override
-		public String toString() {
-			return "Point [x=" + x + ", y=" + y + "]";
-		}
-    	
-    }
-    
-    private class CutPoint {
-    	public Point max;
-    	public Point min;
-    }
     
 }

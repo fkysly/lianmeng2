@@ -18,16 +18,20 @@
 
     <application
         android:icon="@drawable/facepp_icon"
-        android:label="Facepp Android Detect Demo"
+        android:label="像不像"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.facpp.picturedetect.MainActivity"
+            android:name="com.facpp.picturedetect.FirstActivity"
             android:label="Facepp Android Detect Demo" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="com.facpp.picturedetect.MainActivity"
+            android:label="Facepp Android Detect Demo" >
         </activity>
         <activity
             android:name="com.facpp.picturedetect.ResultActivity"
